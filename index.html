@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinhala OCR - Character Recognition</title>
+    <style>
+        .lens-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            max-width: 520px;
+            margin: 30px auto;
+            padding: 24px 20px 20px 20px;
+            position: relative;
+        }
+        .lens-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .lens-btn {
+            background: #f1f3f4;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #222;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .lens-btn:hover {
+            background: #e0e3e6;
+        }
+        .lens-textarea {
+            width: 100%;
+            min-height: 60px;
+            font-size: 1.3em;
+            border: none;
+            background: #e8f0fe;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            resize: none;
+            outline: none;
+        }
+        .lens-image-container {
+            text-align: center;
+        }
+        .lens-image-container img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px dashed #dee2e6;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #f0f8ff;
+        }
+        
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+        
+        .file-input {
+            margin: 20px 0;
+        }
+        
+        .file-input input[type="file"] {
+            display: none;
+        }
+        
+        .file-input label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 1.1em;
+        }
+        
+        .file-input label:hover {
+            background: #5a6fd8;
+        }
+        
+        .upload-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-left: 15px;
+            transition: background 0.3s ease;
+        }
+        
+        .upload-btn:hover {
+            background: #218838;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .preview-section {
+            margin: 20px 0;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .results-section {
+            margin-top: 30px;
+        }
+        
+        .results-header {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .character-result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .character-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .character-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .character-details {
+            flex-grow: 1;
+        }
+        
+        .character-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1em;
+        }
+        
+        .character-confidence {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .copy-btn:hover {
+            background: #138496;
+        }
+        
+        .final-text {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            position: relative;
+        }
+        
+        .copy-all-btn {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        
+        .copy-all-btn:hover {
+            background: #5a32a3;
+        }
+        
+        .text-extraction-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .extracted-text-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.3em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: white;
+            resize: vertical;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .extracted-text-area:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .text-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .action-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .copy-btn-large {
+            background: #28a745 !important;
+        }
+        
+        .copy-btn-large:hover {
+            background: #218838 !important;
+        }
+        
+        .edit-btn {
+            background: #ffc107 !important;
+            color: #333 !important;
+        }
+        
+        .edit-btn:hover {
+            background: #e0a800 !important;
+        }
+        
+        .select-all-btn {
+            background: #17a2b8 !important;
+        }
+        
+        .select-all-btn:hover {
+            background: #138496 !important;
+        }
+        
+        .word-spacing-btn {
+            background: #6f42c1 !important;
+        }
+        
+        .word-spacing-btn:hover {
+            background: #5a32a3 !important;
+        }
+        
+        .text-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .copy-status {
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .btn-icon {
+            font-size: 1.1em;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .annotated-image {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .recognized-textarea {
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .character-result {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇱🇰 Sinhala OCR</h1>
+            <p>Upload an image with Sinhala text and get character-by-character recognition results</p>
+        </div>
+        <div class="upload-section" id="uploadSection">
+            <h3>📤 Upload Image</h3>
+            <p>Drag and drop an image here or click to select</p>
+            <div class="file-input">
+                <label for="fileInput">Choose Image File</label>
+                <input type="file" id="fileInput" accept="image/*">
+                <button class="upload-btn" id="uploadBtn" disabled>Recognize Text</button>
+            </div>
+            <div class="preview-section" id="previewSection"></div>
+        </div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing image... Please wait</p>
+        </div>
+        <div class="lens-card" id="lensCard" style="display: none;">
+            <div class="lens-toolbar">
+                <button class="lens-btn" onclick="copyExtractedText()">Copy</button>
+                <button class="lens-btn" onclick="listenExtractedText()">Listen</button>
+                <button class="lens-btn" onclick="searchExtractedText()">Search</button>
+                <button class="lens-btn" onclick="translateExtractedText()">Translate</button>
+            </div>
+            <textarea id="extractedTextArea" class="lens-textarea" readonly></textarea>
+            <div id="annotatedImageContainer" class="lens-image-container"></div>
+        </div>
+
+    <script>
+        let selectedFile = null;
+        
+        // File input handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0]);
+        });
+        
+        // Drag and drop handling
+        const uploadSection = document.getElementById('uploadSection');
+        
+        uploadSection.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+        
+        function handleFileSelect(file) {
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file.');
+                return;
+            }
+            
+            selectedFile = file;
+            document.getElementById('uploadBtn').disabled = false;
+            
+            // Show preview
+            const previewSection = document.getElementById('previewSection');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewSection.innerHTML = `
+                    <h4>📷 Image Preview:</h4>
+                    <img src="${e.target.result}" alt="Preview" class="image-preview">
+                    <p><strong>File:</strong> ${file.name} (${(file.size/1024).toFixed(1)} KB)</p>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Upload and process
+        document.getElementById('uploadBtn').addEventListener('click', async function() {
+            if (!selectedFile) return;
+            const loadingEl = document.getElementById('loading');
+            const lensCard = document.getElementById('lensCard');
+            loadingEl.style.display = 'block';
+            lensCard.style.display = 'none';
+            clearMessages();
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                displayLensResults(result);
+            } catch (error) {
+                showError('Error processing image: ' + error.message);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        });
+        
+        function displayLensResults(result) {
+            const lensCard = document.getElementById('lensCard');
+            const extractedTextArea = document.getElementById('extractedTextArea');
+            const annotatedContainer = document.getElementById('annotatedImageContainer');
+            lensCard.style.display = 'block';
+            // Set recognized text
+            let fullText = '';
+            if (result.predictions && result.predictions.length > 0) {
+                result.predictions.forEach(pred => {
+                    const char = pred.char || pred.label;
+                    fullText += char;
+                });
+            }
+            extractedTextArea.value = fullText;
+            // Show annotated image
+            annotatedContainer.innerHTML = '';
+            if (result.annotated_image) {
+                annotatedContainer.innerHTML = `<img src="data:image/png;base64,${result.annotated_image}" alt="Annotated" />`;
+            }
+        }
+        function listenExtractedText() {
+            const text = document.getElementById('extractedTextArea').value;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'si-LK';
+            window.speechSynthesis.speak(utter);
+        }
+        function searchExtractedText() {
+            const text = document.getElementById('extractedTextArea').value;
+            window.open('https://www.google.com/search?q=' + encodeURIComponent(text), '_blank');
+        }
+        function translateExtractedText() {
+            const text = document.getElementById('extractedTextArea').value;
+            window.open('https://translate.google.com/?sl=auto&tl=en&text=' + encodeURIComponent(text), '_blank');
+        }
+        
+        function copyCharacter(char) {
+            navigator.clipboard.writeText(char).then(() => {
+                showSuccess(`Copied character: ${char}`);
+            }).catch(() => {
+                showError('Failed to copy character');
+            });
+        }
+        
+        function copyExtractedText() {
+            const text = document.getElementById('extractedTextArea').value;
+            if (!text.trim()) {
+                showError('No text to copy');
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyStatus('✓ Text copied successfully!');
+                showSuccess(`Copied ${text.length} characters to clipboard`);
+            }).catch(() => {
+                showError('Failed to copy text');
+            });
+        }
+        
+        function toggleEditMode() {
+            const textArea = document.getElementById('extractedTextArea');
+            const editBtn = event.target;
+            
+            if (textArea.readOnly) {
+                textArea.readOnly = false;
+                textArea.style.borderColor = '#ffc107';
+                editBtn.innerHTML = '<span class="btn-icon">💾</span> Save Text';
+                editBtn.style.background = '#28a745';
+                showSuccess('Edit mode enabled - you can now modify the text');
+            } else {
+                textArea.readOnly = true;
+                textArea.style.borderColor = '#e9ecef';
+                editBtn.innerHTML = '<span class="btn-icon">✏️</span> Edit Text';
+                editBtn.style.background = '#ffc107';
+                updateTextStats(textArea.value);
+                showSuccess('Text saved - edit mode disabled');
+            }
+        }
+        
+        function selectAllText() {
+            const textArea = document.getElementById('extractedTextArea');
+            textArea.select();
+            textArea.setSelectionRange(0, 99999); // For mobile devices
+            showCopyStatus('Text selected - Press Ctrl+C to copy');
+        }
+        
+        function addWordSpacing() {
+            const textArea = document.getElementById('extractedTextArea');
+            const currentText = textArea.value;
+            
+            // Add spaces between different character types (rough word separation)
+            let spacedText = '';
+            for (let i = 0; i < currentText.length; i++) {
+                spacedText += currentText[i];
+                
+                // Add space after punctuation or when changing character types
+                if (i < currentText.length - 1) {
+                    const current = currentText[i];
+                    const next = currentText[i + 1];
+                    
+                    // Add space after punctuation marks
+                    if ('.,!?;:'.includes(current)) {
+                        spacedText += ' ';
+                    }
+                    // Add space between different script types (basic heuristic)
+                    else if (isLatinChar(current) && isSinhalaChar(next)) {
+                        spacedText += ' ';
+                    }
+                    else if (isSinhalaChar(current) && isLatinChar(next)) {
+                        spacedText += ' ';
+                    }
+                }
+            }
+            
+            textArea.value = spacedText;
+            updateTextStats(spacedText);
+            showSuccess('Added word spacing to text');
+        }
+        
+        function isLatinChar(char) {
+            return /[a-zA-Z0-9]/.test(char);
+        }
+        
+        function isSinhalaChar(char) {
+            const code = char.charCodeAt(0);
+            return (code >= 0x0D80 && code <= 0x0DFF); // Sinhala Unicode range
+        }
+        
+        function updateTextStats(text) {
+            const charCount = text.length;
+            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+            document.getElementById('textStats').textContent = `Characters: ${charCount} | Words: ${wordCount}`;
+        }
+        
+        function showCopyStatus(message) {
+            const statusEl = document.getElementById('copyStatus');
+            statusEl.textContent = message;
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 3000);
+        }
+        
+        function copyAllText() {
+            // Legacy function - redirect to new function
+            copyExtractedText();
+        }
+        
+        function showError(message) {
+            clearMessages();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.container').insertBefore(errorDiv, document.getElementById('loading'));
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+        
+        function showSuccess(message) {
+            clearMessages();
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.container').insertBefore(successDiv, document.getElementById('loading'));
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+        
+        function clearMessages() {
+            document.querySelectorAll('.error, .success').forEach(el => el.remove());
+        }
+        
+        function copyText() {
+          var copyText = document.getElementById("recognizedText");
+          copyText.select();
+          document.execCommand("copy");
+        }
+    </script>
+</body>
+</html>
